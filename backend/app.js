@@ -1,0 +1,57 @@
+const express = require( 'express' );
+const cors = require( 'cors' );
+const connetion = require( './db' );
+
+const server = express();
+server.use(cors());
+server.use(express.json());
+
+//Atende a RF04 (listar produtos)
+server.get('/produtos', (req, res) => {
+    const sql = 'SELECT * FROM produto';
+    connetion.query(sql, (erro, resultados) => {
+        if (erro) {
+            res.status(500).json({ error: erro.menssage });
+        } 
+        return  res.json(resultados);
+    });
+});
+
+server.get('/produtos/ordenados', (req, res) => {
+    const sql = 'SELECT * FROM produto ORDER BY nome ASC';
+    connetion.query(sql, (erro, resultados) => {
+        if (erro) {
+            res.status(500).json({ error: erro.menssage });
+        } 
+        return  res.json(resultados);
+    });
+});
+
+//ROTA: GET /produtos/:id
+server.get('/produtos/:id', (req, res) => {
+    const id = req.params.id;
+    const sql = 'SELECT * FROM produto WHERE id_produto = ?';
+    connetion.query(sql, [id], (erro, resultados) => {
+        if (erro) {
+            res.status(500).json({ error: erro.menssage });
+        } 
+        return  res.json(resultados[0]);
+    });
+});
+
+server.get('/produtos/busca/:termo', (req, res) => {
+    // Monta a string de busca com % no início e no fim
+    const termoBusca = `%${req.params.termo}%`; 
+    const sql = 'SELECT * FROM produto WHERE nome LIKE ?';
+
+    connetion.query(sql, [termoBusca], (erro, resultados) => {
+        if (erro) {
+            return res.status(500).json({ error: erro.message });
+        } 
+        return res.json(resultados); // Retorna a lista de produtos encontrados
+    });
+});
+
+server.listen(3000,() => {
+    console.log('Servidor rodando na porta 3000');
+});
